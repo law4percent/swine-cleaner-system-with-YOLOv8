@@ -50,38 +50,46 @@ class SwineDetectionSystem:
         # Setup GUI
         self.setup_gui()
 
+
+
     def setup_gui(self):
         """Set up the GUI components"""
         # GUI Setup
         ctk.set_appearance_mode("Gray")
         ctk.set_default_color_theme("blue")
+        ctk.set_widget_scaling(1.0)  # Ensures consistent widget sizes
+        ctk.set_window_scaling(1.0)  # Ensures consistent window sizes
 
         self.app = ctk.CTk()
         self.app.title(self.APP_TITLE)
         self.app.geometry("1200x800")
+        self.app.minsize(800, 600)  # Set minimum window size
         self.app.grid_columnconfigure(0, weight=1)
         self.app.grid_rowconfigure(0, weight=1)
 
         # Create main frame
         main_frame = ctk.CTkFrame(self.app)
         main_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
-        main_frame.grid_columnconfigure(0, weight=5)
-        main_frame.grid_columnconfigure(1, weight=2)
-        main_frame.grid_rowconfigure(0, weight=3)
-        main_frame.grid_rowconfigure(1, weight=1)
+        main_frame.grid_columnconfigure(0, weight=3)  # Increase video area weight
+        main_frame.grid_columnconfigure(1, weight=1)  # Control panel weight
+        main_frame.grid_rowconfigure(0, weight=4)     # More space for video
+        main_frame.grid_rowconfigure(1, weight=1)     # Less space for log
 
         # Left section - Video display and status
         left_frame = ctk.CTkFrame(main_frame)
         left_frame.grid(row=0, column=0, rowspan=2, sticky="nsew", padx=5, pady=5)
         left_frame.grid_rowconfigure(0, weight=1)
         left_frame.grid_columnconfigure(0, weight=1)
+        left_frame.configure(width=640)  # Minimum width for left side
 
         video_frame = ctk.CTkFrame(left_frame)
         video_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         video_frame.grid_rowconfigure(0, weight=1)
         video_frame.grid_columnconfigure(0, weight=1)
+        video_frame.configure(width=640, height=480)  # Set minimum size for video frame
 
-        self.video_label = ctk.CTkLabel(video_frame, text="")
+        self.video_label = ctk.CTkLabel(video_frame, text="", corner_radius=0, 
+                                    bg_color="gray20", fg_color="gray20")
         self.video_label.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         status_frame = ctk.CTkFrame(video_frame)
@@ -101,42 +109,59 @@ class SwineDetectionSystem:
         # Right section - Statistics and controls
         right_frame = ctk.CTkFrame(main_frame)
         right_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-        right_frame.grid_rowconfigure(0, weight=0)
+        right_frame.grid_rowconfigure(0, weight=1)
         right_frame.grid_columnconfigure(0, weight=1)
+        right_frame.configure(width=300)  # Minimum width for right side
 
-        stats_label = ctk.CTkLabel(right_frame, text="Detection Statistics", font=("Arial", 16, "bold"))
+        # Create a scrollable frame for the right side content with horizontal scrolling
+        right_scrollable_frame = ctk.CTkScrollableFrame(right_frame, orientation="vertical")
+        right_scrollable_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+        right_scrollable_frame.grid_columnconfigure(0, weight=1)
+
+        stats_label = ctk.CTkLabel(right_scrollable_frame, text="Detection Statistics", font=("Arial", 16, "bold"))
         stats_label.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 5))
 
-        stats_frame = ctk.CTkFrame(right_frame)
+        stats_frame = ctk.CTkFrame(right_scrollable_frame)
         stats_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
         stats_frame.grid_columnconfigure(0, weight=1)
         stats_frame.grid_columnconfigure(1, weight=1)
+        stats_frame.configure(width=280)  # Increased minimum width
+        
 
-        self.total_detections = ctk.CTkLabel(stats_frame, text="Total Detections: 0", font=("Arial", 14))
+        self.total_detections = ctk.CTkLabel(stats_frame, text="Total Detections: 0", font=("Arial", 14), anchor="w", width=260)  # Force wider with explicit width
         self.total_detections.grid(row=0, column=0, columnspan=2, sticky="w", padx=10, pady=5)
-
-        self.clean_detections = ctk.CTkLabel(stats_frame, text="Clean Pigs: 0", font=("Arial", 14))
+        
+        self.clean_detections = ctk.CTkLabel(stats_frame, text="Clean Pigs: 0", font=("Arial", 14), anchor="w", width=120)  # Force wider with explicit width
         self.clean_detections.grid(row=1, column=0, sticky="w", padx=10, pady=5)
-
-        self.uncleaned_detections = ctk.CTkLabel(stats_frame, text="Uncleaned Pigs: 0", font=("Arial", 14), text_color="#FF5555")
+        
+        self.uncleaned_detections = ctk.CTkLabel(stats_frame, text="Uncleaned Pigs: 0", font=("Arial", 14), text_color="#FF5555", anchor="w", width=140)  # Force wider
         self.uncleaned_detections.grid(row=1, column=1, sticky="w", padx=10, pady=5)
-
-        self.dirt_detections = ctk.CTkLabel(stats_frame, text="Dirt: 0", font=("Arial", 14))
+        
+        self.dirt_detections = ctk.CTkLabel(stats_frame, text="Dirt: 0", font=("Arial", 14), anchor="w", width=120)  # Force wider with explicit width
         self.dirt_detections.grid(row=2, column=0, sticky="w", padx=10, pady=5)
-
+        
         # Camera settings section
-        camera_frame = ctk.CTkFrame(right_frame)
+        camera_frame = ctk.CTkFrame(right_scrollable_frame)
         camera_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
-        camera_frame.grid_columnconfigure(0, weight=1)
-        camera_frame.grid_columnconfigure(1, weight=2)
-
-        camera_label = ctk.CTkLabel(camera_frame, text="Camera Settings", font=("Arial", 14, "bold"))
+        camera_frame.grid_columnconfigure(0, weight=2)  # Give more space to label column
+        camera_frame.grid_columnconfigure(1, weight=3)
+        camera_frame.configure(width=280)  # Increased minimum width
+        
+        camera_label = ctk.CTkLabel(camera_frame, text="Camera Settings", font=("Arial", 14, "bold"), anchor="w", width=260)
         camera_label.grid(row=0, column=0, columnspan=2, sticky="w", padx=10, pady=5)
-
+        
         # Camera source dropdown
-        source_label = ctk.CTkLabel(camera_frame, text="Camera Source:")
+        source_label = ctk.CTkLabel(camera_frame, text="Camera Source:", anchor="w", width=120)
         source_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
-
+        
+        # Fix custom URL label
+        url_label = ctk.CTkLabel(camera_frame, text="Custom URL:", anchor="w", width=120)
+        url_label.grid(row=2, column=0, sticky="w", padx=10, pady=5)
+        
+        # Fix PC Camera index label
+        pc_cam_label = ctk.CTkLabel(camera_frame, text="Camera Index:", anchor="w", width=120)
+        pc_cam_label.grid(row=3, column=0, sticky="w", padx=10, pady=5)
+    
         self.camera_source_var = ctk.StringVar(value=self.current_camera_source)
         self.camera_source_dropdown = ctk.CTkOptionMenu(
             camera_frame, 
@@ -167,18 +192,19 @@ class SwineDetectionSystem:
         self.connect_button.grid(row=4, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
         # Settings section
-        settings_frame = ctk.CTkFrame(right_frame)
+        settings_frame = ctk.CTkFrame(right_scrollable_frame)
         settings_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
-        settings_frame.grid_columnconfigure(0, weight=1)
-        settings_frame.grid_columnconfigure(1, weight=2)
-
-        settings_label = ctk.CTkLabel(settings_frame, text="Settings", font=("Arial", 14, "bold"))
+        settings_frame.grid_columnconfigure(0, weight=2)  # Give more space to label column
+        settings_frame.grid_columnconfigure(1, weight=3)
+        settings_frame.configure(width=280)  # Increased minimum width
+        
+        settings_label = ctk.CTkLabel(settings_frame, text="Settings", font=("Arial", 14, "bold"), anchor="w", width=260)
         settings_label.grid(row=0, column=0, columnspan=2, sticky="w", padx=10, pady=5)
-
-        # Confidence threshold slider
-        conf_label = ctk.CTkLabel(settings_frame, text="Confidence:")
+        
+        # Fix confidence label
+        conf_label = ctk.CTkLabel(settings_frame, text="Confidence:", anchor="w", width=120)
         conf_label.grid(row=1, column=0, sticky="w", padx=10, pady=5)
-
+        
         self.conf_slider = ctk.CTkSlider(settings_frame, from_=0.05, to=0.95, number_of_steps=18, command=self.update_confidence)
         self.conf_slider.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
         self.conf_slider.set(self.CONFIDENCE_THRESHOLD)
@@ -186,10 +212,10 @@ class SwineDetectionSystem:
         self.conf_value = ctk.CTkLabel(settings_frame, text=f"{self.CONFIDENCE_THRESHOLD:.2f}")
         self.conf_value.grid(row=1, column=2, padx=5, pady=5)
 
-        # Cooldown slider
-        cooldown_label = ctk.CTkLabel(settings_frame, text="Alert Cooldown:")
+        # Fix cooldown label
+        cooldown_label = ctk.CTkLabel(settings_frame, text="Alert Cooldown:", anchor="w", width=120)
         cooldown_label.grid(row=2, column=0, sticky="w", padx=10, pady=5)
-
+        
         self.cooldown_slider = ctk.CTkSlider(settings_frame, from_=5, to=60, number_of_steps=11, command=self.update_cooldown)
         self.cooldown_slider.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
         self.cooldown_slider.set(self.COOLDOWN_SECONDS)
@@ -198,10 +224,11 @@ class SwineDetectionSystem:
         self.cooldown_value.grid(row=2, column=2, padx=5, pady=5)
 
         # Control buttons
-        controls_frame = ctk.CTkFrame(right_frame)
+        controls_frame = ctk.CTkFrame(right_scrollable_frame)
         controls_frame.grid(row=4, column=0, sticky="ew", padx=10, pady=10)
         controls_frame.grid_columnconfigure(0, weight=1)
         controls_frame.grid_columnconfigure(1, weight=1)
+        controls_frame.configure(width=250)  # Set minimum width
 
         self.toggle_button = ctk.CTkButton(controls_frame, text="Pause Detection", command=self.toggle_detection, fg_color="#2B7539")
         self.toggle_button.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
@@ -225,7 +252,7 @@ class SwineDetectionSystem:
         self.log_box.grid(row=1, column=0, sticky="nsew", padx=10, pady=(5, 10))
 
         # Set up window close handler
-        self.app.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.app.protocol("WM_DELETE_WINDOW", self.on_closing) 
 
     def on_camera_source_changed(self, source):
         """Handle camera source dropdown change"""

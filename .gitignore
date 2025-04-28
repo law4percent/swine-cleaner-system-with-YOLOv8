@@ -1,1 +1,3 @@
 desktop-app/venv
+desktop-app/src/mylib/__pycache__
+desktop-app/logs
